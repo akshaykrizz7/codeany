@@ -262,35 +262,50 @@ func mergeConfig(dst, src *Config) {
 	}
 }
 
+// applyEnvOverrides fills in values from environment variables,
+// but ONLY if the config file didn't already set them.
+// Priority: settings.json > project config > env vars > defaults
 func applyEnvOverrides(cfg *Config) {
-	envKeys := []string{"CODEANY_API_KEY", "ANTHROPIC_API_KEY"}
-	for _, key := range envKeys {
-		if v := os.Getenv(key); v != "" {
-			cfg.APIKey = v
-			break
+	if cfg.APIKey == "" {
+		for _, key := range []string{"CODEANY_API_KEY", "ANTHROPIC_API_KEY"} {
+			if v := os.Getenv(key); v != "" {
+				cfg.APIKey = v
+				break
+			}
 		}
 	}
 
-	envURLs := []string{"CODEANY_BASE_URL", "ANTHROPIC_BASE_URL"}
-	for _, key := range envURLs {
-		if v := os.Getenv(key); v != "" {
-			cfg.BaseURL = v
-			break
+	if cfg.BaseURL == "" {
+		for _, key := range []string{"CODEANY_BASE_URL", "ANTHROPIC_BASE_URL"} {
+			if v := os.Getenv(key); v != "" {
+				cfg.BaseURL = v
+				break
+			}
 		}
 	}
 
-	envModels := []string{"CODEANY_MODEL", "ANTHROPIC_MODEL"}
-	for _, key := range envModels {
-		if v := os.Getenv(key); v != "" {
-			cfg.Model = v
-			break
+	// Model: only use env if config didn't set one (or it's still the default)
+	if cfg.Model == "" || cfg.Model == "sonnet-4-6" {
+		for _, key := range []string{"CODEANY_MODEL", "ANTHROPIC_MODEL"} {
+			if v := os.Getenv(key); v != "" {
+				cfg.Model = v
+				break
+			}
 		}
 	}
 
-	if v := os.Getenv("HTTPS_PROXY"); v != "" {
-		cfg.ProxyURL = v
-	} else if v := os.Getenv("HTTP_PROXY"); v != "" {
-		cfg.ProxyURL = v
+	if cfg.Provider == "" {
+		if v := os.Getenv("CODEANY_PROVIDER"); v != "" {
+			cfg.Provider = v
+		}
+	}
+
+	if cfg.ProxyURL == "" {
+		if v := os.Getenv("HTTPS_PROXY"); v != "" {
+			cfg.ProxyURL = v
+		} else if v := os.Getenv("HTTP_PROXY"); v != "" {
+			cfg.ProxyURL = v
+		}
 	}
 }
 
