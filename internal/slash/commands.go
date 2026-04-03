@@ -1336,6 +1336,209 @@ func (h *Handler) btwCmd(args []string) Result {
 	}
 }
 
+// ─── /agents ──────────────────────────────────────
+
+func (h *Handler) agentsCmd(args []string) Result {
+	return Result{Message: "Available agent types:\n\n  general-purpose  General task handling\n  explore          Fast codebase search\n  plan             Implementation planning\n\nThe agent will automatically spawn subagents as needed via the Agent tool.\nUse /team to manage multi-agent teams."}
+}
+
+// ─── /tasks ───────────────────────────────────────
+
+func (h *Handler) tasksCmd(args []string) Result {
+	return Result{
+		SkillPrompt: "Show the current task list. If no tasks exist, say so. Use TaskList tool.",
+	}
+}
+
+// ─── /rewind ──────────────────────────────────────
+
+func (h *Handler) rewindCmd(args []string) Result {
+	a := h.app.GetAgent()
+	if a == nil {
+		return Result{Message: "No conversation to rewind."}
+	}
+	msgs := a.GetMessages()
+	if len(msgs) < 2 {
+		return Result{Message: "Nothing to rewind."}
+	}
+	// Clear and note
+	a.Clear()
+	return Result{
+		Message:       fmt.Sprintf("✓ Rewound conversation (removed %d messages). Start fresh.", len(msgs)),
+		ClearMessages: true,
+	}
+}
+
+// ─── /brief ───────────────────────────────────────
+
+func (h *Handler) briefCmd(args []string) Result {
+	return Result{
+		Message:     "Brief mode toggled.",
+		BriefToggle: true,
+	}
+}
+
+// ─── /share ───────────────────────────────────────
+
+func (h *Handler) shareCmd(args []string) Result {
+	// Export to a shareable format
+	a := h.app.GetAgent()
+	if a == nil {
+		return Result{Message: "No conversation to share."}
+	}
+
+	home, _ := os.UserHomeDir()
+	filename := fmt.Sprintf("codeany-share-%s.md", time.Now().Format("20060102-150405"))
+	path := filepath.Join(home, filename)
+
+	var b strings.Builder
+	b.WriteString("# Codeany Conversation\n\n")
+	b.WriteString(fmt.Sprintf("*Shared on %s*\n\n---\n\n", time.Now().Format("2006-01-02 15:04")))
+
+	for _, msg := range a.GetMessages() {
+		switch msg.Role {
+		case "user":
+			b.WriteString("**User:**\n\n")
+		case "assistant":
+			b.WriteString("**Assistant:**\n\n")
+		}
+		for _, block := range msg.Content {
+			if block.Text != "" {
+				b.WriteString(block.Text + "\n\n")
+			}
+		}
+		b.WriteString("---\n\n")
+	}
+
+	os.WriteFile(path, []byte(b.String()), 0644)
+	return Result{Message: fmt.Sprintf("✓ Shared to %s", path)}
+}
+
+// ─── /env ─────────────────────────────────────────
+
+func (h *Handler) envCmd(args []string) Result {
+	var b strings.Builder
+	b.WriteString("Environment:\n\n")
+
+	envVars := []string{
+		"CODEANY_API_KEY", "ANTHROPIC_API_KEY",
+		"CODEANY_BASE_URL", "ANTHROPIC_BASE_URL",
+		"CODEANY_MODEL", "ANTHROPIC_MODEL",
+		"CODEANY_PROVIDER",
+		"CODEANY_CUSTOM_HEADERS",
+		"HTTPS_PROXY", "HTTP_PROXY",
+		"SHELL", "TERM", "EDITOR",
+		"HOME", "USER", "PWD",
+	}
+
+	for _, key := range envVars {
+		val := os.Getenv(key)
+		if val == "" {
+			continue
+		}
+		// Mask API keys
+		if strings.Contains(strings.ToLower(key), "key") || strings.Contains(strings.ToLower(key), "token") {
+			if len(val) > 12 {
+				val = val[:8] + "..." + val[len(val)-4:]
+			} else {
+				val = "****"
+			}
+		}
+		b.WriteString(fmt.Sprintf("  %-25s %s\n", key, val))
+	}
+
+	return Result{Message: b.String()}
+}
+
+// ─── /tag ─────────────────────────────────────────
+
+func (h *Handler) tagCmd(args []string) Result {
+	if len(args) == 0 {
+		return Result{Message: "Usage: /tag <label>\n\nTag the current session for easy finding later."}
+	}
+	tag := strings.Join(args, " ")
+	return Result{
+		Message:      fmt.Sprintf("✓ Session tagged: %s", tag),
+		SessionTitle: tag,
+	}
+}
+
+// ─── /add-dir ─────────────────────────────────────
+
+func (h *Handler) addDirCmd(args []string) Result {
+	if len(args) == 0 {
+		return Result{Message: "Usage: /add-dir <path>\n\nAdd a directory to the agent's working context."}
+	}
+	dir := args[0]
+	return Result{
+		SkillPrompt: fmt.Sprintf("The user wants you to also work with files in the directory: %s\nAcknowledge and list its contents.", dir),
+	}
+}
+
+// ─── /onboarding ──────────────────────────────────
+
+func (h *Handler) onboardingCmd(args []string) Result {
+	return Result{
+		SkillPrompt: "Walk me through setting up codeany for this project. Check:\n1. Does CODEANY.md or CLAUDE.md exist? If not, help create one.\n2. What's the tech stack? (check for package.json, go.mod, Cargo.toml, etc.)\n3. How to build/test/lint?\n4. Any existing .codeany/ or .claude/ configuration?\n5. Suggest skills or hooks that would be useful.\n\nBe concise and actionable.",
+	}
+}
+
+// ─── /output-style ────────────────────────────────
+
+func (h *Handler) outputStyleCmd(args []string) Result {
+	if len(args) == 0 {
+		return Result{Message: "Usage: /output-style <concise|detailed|markdown|plain>\n\nChange how the agent formats responses."}
+	}
+	style := args[0]
+	instructions := ""
+	switch strings.ToLower(style) {
+	case "concise":
+		instructions = "From now on, be extremely concise. Use short sentences. Skip explanations unless asked."
+	case "detailed":
+		instructions = "From now on, provide detailed explanations with examples and reasoning."
+	case "markdown":
+		instructions = "From now on, format all responses with rich markdown: headers, code blocks, lists, tables."
+	case "plain":
+		instructions = "From now on, use plain text only. No markdown formatting, no emojis."
+	default:
+		return Result{Message: fmt.Sprintf("Unknown style: %s\nUse: concise, detailed, markdown, plain", style)}
+	}
+	return Result{
+		Message:     fmt.Sprintf("Output style: %s", style),
+		SkillPrompt: fmt.Sprintf("[System instruction: %s]", instructions),
+	}
+}
+
+// ─── /passes ──────────────────────────────────────
+
+func (h *Handler) passesCmd(args []string) Result {
+	if len(args) == 0 {
+		return Result{Message: "Usage: /passes <task>\n\nMulti-pass mode: the agent will make multiple passes over the task,\nrefining its work each time. Good for complex refactoring or review."}
+	}
+	task := strings.Join(args, " ")
+	return Result{
+		SkillPrompt: fmt.Sprintf("Perform this task in multiple passes:\n\nTask: %s\n\nPass 1: Initial implementation/analysis\nPass 2: Review and fix issues from pass 1\nPass 3: Polish and verify\n\nClearly label each pass.", task),
+	}
+}
+
+// ─── /insights ────────────────────────────────────
+
+func (h *Handler) insightsCmd(args []string) Result {
+	target := strings.Join(args, " ")
+	if target == "" {
+		target = "this codebase"
+	}
+	return Result{
+		SkillPrompt: fmt.Sprintf("Analyze %s and provide insights:\n1. Architecture patterns used\n2. Code quality observations\n3. Potential improvements\n4. Dependencies worth updating\n5. Performance considerations\n6. Security observations", target),
+	}
+}
+
+// ─── /color ───────────────────────────────────────
+
+func (h *Handler) colorCmd(args []string) Result {
+	return Result{Message: "Color settings:\n\n  Current: dark (default)\n\n  Use /theme dark or /theme light to switch themes.\n  Custom colors are not yet supported."}
+}
+
 // ─── helpers ──────────────────────────────────────
 
 func min(a, b int) int {

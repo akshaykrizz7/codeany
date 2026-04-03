@@ -28,6 +28,7 @@ type Result struct {
 	ClearMessages bool
 	SkillPrompt   string // If set, send this as a prompt to the agent
 	PlanToggle    bool   // Toggle plan mode
+	BriefToggle   bool   // Toggle brief mode
 	SessionTitle  string // Rename current session
 	VimToggle     bool   // Toggle vim mode
 	StartLogin    bool   // Start interactive login wizard
@@ -115,6 +116,24 @@ func AllCommands() []CommandDef {
 		{Name: "/btw", Description: "Side question (queued during execution)", HasArgs: true},
 		// Reasoning
 		{Name: "/effort", Description: "Set reasoning effort (low/medium/high/max)", HasArgs: true},
+		{Name: "/passes", Description: "Multi-pass task execution", HasArgs: true},
+		// Agents
+		{Name: "/agents", Description: "Show available agent types"},
+		{Name: "/tasks", Description: "Show task list"},
+		// Navigation
+		{Name: "/rewind", Description: "Undo last conversation turn"},
+		{Name: "/brief", Description: "Toggle brief output mode"},
+		{Name: "/output-style", Description: "Change output format", HasArgs: true},
+		{Name: "/color", Description: "Color settings"},
+		// Sharing
+		{Name: "/share", Description: "Export conversation for sharing"},
+		{Name: "/tag", Description: "Tag current session", HasArgs: true},
+		// Context
+		{Name: "/env", Description: "Show environment variables"},
+		{Name: "/add-dir", Description: "Add directory to context", HasArgs: true},
+		{Name: "/onboarding", Description: "First-time project setup"},
+		// Analysis
+		{Name: "/insights", Description: "Code insights and analysis", HasArgs: true},
 	}
 }
 
@@ -266,6 +285,32 @@ func (h *Handler) Handle(input string) Result {
 		return h.btwCmd(args)
 	case "/effort":
 		return h.effortCmd(args)
+	case "/passes":
+		return h.passesCmd(args)
+	case "/agents":
+		return h.agentsCmd(args)
+	case "/tasks":
+		return h.tasksCmd(args)
+	case "/rewind":
+		return h.rewindCmd(args)
+	case "/brief":
+		return h.briefCmd(args)
+	case "/output-style":
+		return h.outputStyleCmd(args)
+	case "/color":
+		return h.colorCmd(args)
+	case "/share":
+		return h.shareCmd(args)
+	case "/tag":
+		return h.tagCmd(args)
+	case "/env":
+		return h.envCmd(args)
+	case "/add-dir":
+		return h.addDirCmd(args)
+	case "/onboarding":
+		return h.onboardingCmd(args)
+	case "/insights":
+		return h.insightsCmd(args)
 	default:
 		// Try skill invocation
 		if result, ok := h.HandleSkillInvocation(cmd, args); ok {
@@ -281,16 +326,18 @@ func (h *Handler) help() Result {
 	b.WriteString("Core:\n")
 	b.WriteString("  /help          Show this help\n")
 	b.WriteString("  /clear         Clear conversation\n")
-	b.WriteString("  /compact       Compact with optional instructions\n")
+	b.WriteString("  /compact       Compact with instructions\n")
 	b.WriteString("  /model [name]  Show or change model\n")
 	b.WriteString("  /fast          Toggle faster model\n")
-	b.WriteString("  /plan [task]   Toggle plan mode / plan a task\n")
+	b.WriteString("  /effort [lvl]  Set reasoning depth (low/med/high/max)\n")
+	b.WriteString("  /plan [task]   Plan mode / plan a task\n")
+	b.WriteString("  /brief         Toggle concise output\n")
 	b.WriteString("  /quit          Exit\n")
 
 	b.WriteString("\nGit & Code:\n")
-	b.WriteString("  /commit [msg]  Create git commit\n")
+	b.WriteString("  /commit [msg]  Git commit\n")
 	b.WriteString("  /review        Code review\n")
-	b.WriteString("  /diff          Show git diff summary\n")
+	b.WriteString("  /diff          Git diff summary\n")
 	b.WriteString("  /branch        Branch management\n")
 	b.WriteString("  /pr [desc]     Create pull request\n")
 	b.WriteString("  /stash         Stash management\n")
@@ -298,36 +345,50 @@ func (h *Handler) help() Result {
 	b.WriteString("  /test          Run tests\n")
 	b.WriteString("  /sec           Security review\n")
 	b.WriteString("  /refactor      Refactor code\n")
+
+	b.WriteString("\nAnalysis:\n")
 	b.WriteString("  /summary       Summarize codebase\n")
+	b.WriteString("  /insights      Code insights & analysis\n")
+	b.WriteString("  /passes <task> Multi-pass execution\n")
 	b.WriteString("  /ask <q>       Quick Q&A (no tools)\n")
+	b.WriteString("  /btw <q>       Side question during query\n")
 
 	b.WriteString("\nTools & Context:\n")
-	b.WriteString("  /mcp           Manage MCP servers\n")
+	b.WriteString("  /mcp           MCP servers (list/tools/reconnect)\n")
 	b.WriteString("  /skills        List skills\n")
-	b.WriteString("  /plugin        List plugins\n")
+	b.WriteString("  /plugin        Plugins (list/create/reload)\n")
 	b.WriteString("  /hooks         Show hooks\n")
 	b.WriteString("  /context       Show context sources\n")
+	b.WriteString("  /add-dir <p>   Add directory to context\n")
 	b.WriteString("  /init          Initialize project\n")
+	b.WriteString("  /onboarding    First-time setup wizard\n")
+	b.WriteString("  /env           Show environment\n")
 
 	b.WriteString("\nSession:\n")
-	b.WriteString("  /cost          Cost and token usage\n")
+	b.WriteString("  /cost          Cost and tokens\n")
 	b.WriteString("  /usage         Detailed API usage\n")
 	b.WriteString("  /stats         Session statistics\n")
 	b.WriteString("  /session       Session details\n")
 	b.WriteString("  /files         Files accessed\n")
 	b.WriteString("  /resume        Recent sessions\n")
 	b.WriteString("  /export        Export conversation\n")
+	b.WriteString("  /share         Share conversation\n")
 	b.WriteString("  /copy          Copy last response\n")
 	b.WriteString("  /retry         Retry last message\n")
+	b.WriteString("  /rewind        Undo last turn\n")
+	b.WriteString("  /rename <t>    Name session\n")
+	b.WriteString("  /tag <t>       Tag session\n")
 
 	b.WriteString("\nMulti-agent:\n")
-	b.WriteString("  /team          Team management (create, add, send, inbox)\n")
-	b.WriteString("  /worktree      Git worktree isolation (enter, exit)\n")
+	b.WriteString("  /agents        Available agent types\n")
+	b.WriteString("  /tasks         Task list\n")
+	b.WriteString("  /team          Team management\n")
+	b.WriteString("  /worktree      Git worktree isolation\n")
 
 	b.WriteString("\nConfig:\n")
 	b.WriteString("  /config        Show configuration\n")
-	b.WriteString("  /permissions   Permission mode (bypass/auto/default/plan)\n")
-	b.WriteString("  /login <key>   Set API key\n")
+	b.WriteString("  /permissions   Permission mode + rules\n")
+	b.WriteString("  /login         Setup API key (interactive)\n")
 	b.WriteString("  /logout        Remove API key\n")
 	b.WriteString("  /doctor        Environment check\n")
 	b.WriteString("  /theme         Color theme\n")

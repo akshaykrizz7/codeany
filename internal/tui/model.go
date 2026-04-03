@@ -127,6 +127,7 @@ type Model struct {
 	// Toggle states
 	transcriptMode bool
 	planMode       bool   // no-execution mode
+	briefMode      bool   // concise output mode
 	spinnerVerb    string // current fun spinner verb
 
 	// Queued messages (typed during query execution)
@@ -676,6 +677,16 @@ func (m *Model) handleInputKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			if result.SessionTitle != "" && m.session != nil {
 				m.session.UpdateMeta(m.cfg.Model, 0, m.currentCost, result.SessionTitle)
+			}
+			if result.BriefToggle {
+				m.briefMode = !m.briefMode
+				mode := "OFF"
+				if m.briefMode {
+					mode = "ON"
+				}
+				m.blocks = append(m.blocks, DisplayBlock{
+					Type: "system", Content: fmt.Sprintf("Brief mode: %s", mode), Timestamp: time.Now(),
+				})
 			}
 			if result.VimToggle {
 				// Vim mode is tracked as a visual indicator
